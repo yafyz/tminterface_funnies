@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="34">
+  <Forms>
+    <CETrainer Class="TTrainerForm" Encoding="Ascii85">%VuC.2nldA.0XySO3chlEpp2+%H=!,h4NT?QqxM9b)z@bQZv(tN_-,_Fo*z9Fmp1ohG)XfWH380vO6ahlw^]Tu@{^Z1mqWIg2dSQ3i5-Ki(9hboKy2kQi}WE00</CETrainer>
+  </Forms>
+  <CheatEntries>
+    <CheatEntry>
+      <ID>7</ID>
+      <Description>"launch tmi"</Description>
+      <LastState/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+[ENABLE]
+local PROCESS_NAME = "TmForever.exe"
+local al = nil
+
+local autoAttachTimer = nil
+local autoAttachTimerTicks = 0
+local autoAttachTimerTickMax = 5000
+
+local function tmi_patch(t)
+	if not al.getMemoryRecordByDescription('bypass shutdown').Active then
+        al.getMemoryRecordByDescription('bypass shutdown').Active = true
+        al.getMemoryRecordByDescription('crash bypass 1').Active = true
+        al.getMemoryRecordByDescription('crash bypass 2').Active = true
+        al.getMemoryRecordByDescription('fix bad time').Active = true
+        t.destroy()
+    end
+end
+
+local function aa_ontimer(timer)
+	if autoAttachTimerTickMax &gt; 0 and autoAttachTimerTicks &gt;= autoAttachTimerTickMax then
+		timer.destroy()
+	end
+	if getProcessIDFromProcessName(PROCESS_NAME) ~= nil then
+		openProcess(PROCESS_NAME)
+        al = getAddressList()
+        al.getMemoryRecordByDescription('force online').Active = true
+        al.getMemoryRecordByDescription('force send auth').Active = true
+
+        timer.OnTimer = tmi_patch
+	end
+	autoAttachTimerTicks = autoAttachTimerTicks + 1
+end
+
+local function launch()
+    autoAttachTimer = createTimer(getMainForm())
+    autoAttachTimer.OnTimer = aa_ontimer
+    autoAttachTimer.Interval = 1000
+    createProcess("C:\\Program Files (x86)\\Steam\\steamapps\\common\\TrackMania United\\TMInterface.exe", nil, false, false)
+end
+
+launch()
+[DISABLE]
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"force online"</Description>
+      <LastState Activated="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TmForever.exe
+  Version: 
+  Date   : 2022-02-23
+  Author : fyz
+
+  force online
+}
+
+[ENABLE]
+
+
+aobscanmodule(tm_force_online,TmForever.exe,83 B8 74 01 00 00 00 0F 85) // should be unique
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+  mov dword ptr [eax+00000174],01
+code:
+  cmp dword ptr [eax+00000174],00
+  jmp return
+
+tm_force_online:
+  jmp newmem
+  nop 2
+return:
+registersymbol(tm_force_online)
+
+[DISABLE]
+
+tm_force_online:
+  db 83 B8 74 01 00 00 00
+
+unregistersymbol(tm_force_online)
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: tm_online_check_inject
+
+TmForever.exe+98028: B8 01 00 00 00        - mov eax,00000001
+TmForever.exe+9802D: 89 41 5C              - mov [ecx+5C],eax
+TmForever.exe+98030: 83 3D A4 58 D5 00 00  - cmp dword ptr [TmForever.exe+9558A4],00
+TmForever.exe+98037: 75 0E                 - jne TmForever.exe+98047
+TmForever.exe+98039: 8B CE                 - mov ecx,esi
+TmForever.exe+9803B: E8 B0 3E 10 00        - call TmForever.exe+19BEF0
+TmForever.exe+98040: 8B C8                 - mov ecx,eax
+TmForever.exe+98042: E8 99 13 17 00        - call TmForever.exe+2093E0
+TmForever.exe+98047: 8B 86 2C 01 00 00     - mov eax,[esi+0000012C]
+TmForever.exe+9804D: 8B 80 B0 01 00 00     - mov eax,[eax+000001B0]
+// ---------- INJECTING HERE ----------
+tm_online_check_inject: 83 B8 74 01 00 00 00  - cmp dword ptr [eax+00000174],00
+// ---------- DONE INJECTING  ----------
+TmForever.exe+9805A: 0F 85 87 02 00 00     - jne TmForever.exe+982E7
+TmForever.exe+98060: 8B 0F                 - mov ecx,[edi]
+TmForever.exe+98062: 83 79 5C 00           - cmp dword ptr [ecx+5C],00
+TmForever.exe+98066: 0F 85 7B 02 00 00     - jne TmForever.exe+982E7
+TmForever.exe+9806C: 68 F8 08 B4 00        - push TmForever.exe+7408F8
+TmForever.exe+98071: B9 70 33 D7 00        - mov ecx,TmForever.exe+973370
+TmForever.exe+98076: E8 55 AC 46 00        - call TmForever.exe+502CD0
+TmForever.exe+9807B: 8B 0F                 - mov ecx,[edi]
+TmForever.exe+9807D: 83 C1 1C              - add ecx,1C
+TmForever.exe+98080: 85 C0                 - test eax,eax
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"force send auth"</Description>
+      <LastState Activated="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TmForever.exe
+  Version: 
+  Date   : 2022-02-23
+  Author : fyz
+
+  force send auth
+}
+
+[ENABLE]
+
+
+aobscanmodule(tm_force_send_auth,TmForever.exe,8B 44 24 14 8B 4D 10) // should be unique
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov eax,1
+  mov ecx,[ebp+10]
+  jmp return
+
+tm_force_send_auth:
+  jmp newmem
+  nop 2
+return:
+registersymbol(tm_force_send_auth)
+
+[DISABLE]
+
+tm_force_send_auth:
+  db 8B 44 24 14 8B 4D 10
+
+unregistersymbol(tm_force_send_auth)
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: force_send_auth
+
+TmForever.exe+10F1B8: 8D 41 FF                 - lea eax,[ecx-01]
+TmForever.exe+10F1BB: 74 03                    - je TmForever.exe+10F1C0
+TmForever.exe+10F1BD: 8D 41 FC                 - lea eax,[ecx-04]
+TmForever.exe+10F1C0: 50                       - push eax
+TmForever.exe+10F1C1: E8 B5 3D EF FF           - call TmForever.exe+2F7B
+TmForever.exe+10F1C6: C7 44 24 20 00 00 00 00  - mov [esp+20],00000000
+TmForever.exe+10F1CE: E9 4B 02 00 00           - jmp TmForever.exe+10F41E
+TmForever.exe+10F1D3: 8B 15 B8 F7 BB 00        - mov edx,[TmForever.exe+7BF7B8]
+TmForever.exe+10F1D9: C7 44 24 2C 00 00 00 00  - mov [esp+2C],00000000
+TmForever.exe+10F1E1: 89 54 24 30              - mov [esp+30],edx
+// ---------- INJECTING HERE ----------
+force_send_auth: 8B 44 24 14              - mov eax,[esp+14]
+// ---------- DONE INJECTING  ----------
+TmForever.exe+10F1E9: 8B 4D 10                 - mov ecx,[ebp+10]
+TmForever.exe+10F1EC: 50                       - push eax
+TmForever.exe+10F1ED: 51                       - push ecx
+TmForever.exe+10F1EE: 8D 54 24 34              - lea edx,[esp+34]
+TmForever.exe+10F1F2: 52                       - push edx
+TmForever.exe+10F1F3: 8B CF                    - mov ecx,edi
+TmForever.exe+10F1F5: C6 44 24 54 02           - mov byte ptr [esp+54],02
+TmForever.exe+10F1FA: E8 91 C3 FF FF           - call TmForever.exe+10B590
+TmForever.exe+10F1FF: A1 B8 F7 BB 00           - mov eax,[TmForever.exe+7BF7B8]
+TmForever.exe+10F204: C7 44 24 24 00 00 00 00  - mov [esp+24],00000000
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"bypass shutdown"</Description>
+      <LastState Activated="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TmForever.exe
+  Version: 
+  Date   : 2022-02-23
+  Author : fyz
+
+  This script does blah blah blah
+}
+
+[ENABLE]
+
+aobscanmodule(tm_bypass_shutdown,TMInterface.dll,08 8B 88 D8 FC FF FF 85 C9 74 23 8B 81 2C 01 00 00) // should be unique
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  jmp TMInterface.dll+E1725
+  mov eax,[ecx+0000012C]
+  jmp return
+
+tm_bypass_shutdown+09:
+  jmp newmem
+  nop 3
+return:
+registersymbol(tm_bypass_shutdown)
+
+[DISABLE]
+
+tm_bypass_shutdown+09:
+  db 74 23 8B 81 2C 01 00 00
+
+unregistersymbol(tm_bypass_shutdown)
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: TMInterface.dll+E1700
+
+TMInterface.dll+E16E2: 56                    - push esi
+TMInterface.dll+E16E3: 57                    - push edi
+TMInterface.dll+E16E4: 50                    - push eax
+TMInterface.dll+E16E5: 8D 45 F4              - lea eax,[ebp-0C]
+TMInterface.dll+E16E8: 64 A3 00 00 00 00     - mov fs:[00000000],eax
+TMInterface.dll+E16EE: 8B F9                 - mov edi,ecx
+TMInterface.dll+E16F0: A1 80 15 40 00        - mov eax,[TmForever.exe+1580]
+TMInterface.dll+E16F5: 8B 75 08              - mov esi,[ebp+08]
+TMInterface.dll+E16F8: 8B 88 D8 FC FF FF     - mov ecx,[eax-00000328]
+TMInterface.dll+E16FE: 85 C9                 - test ecx,ecx
+// ---------- INJECTING HERE ----------
+TMInterface.dll+E1700: 74 23                 - je TMInterface.dll+E1725
+// ---------- DONE INJECTING  ----------
+TMInterface.dll+E1702: 8B 81 2C 01 00 00     - mov eax,[ecx+0000012C]
+TMInterface.dll+E1708: 85 C0                 - test eax,eax
+TMInterface.dll+E170A: 74 19                 - je TMInterface.dll+E1725
+TMInterface.dll+E170C: 8B 80 B0 01 00 00     - mov eax,[eax+000001B0]
+TMInterface.dll+E1712: 85 C0                 - test eax,eax
+TMInterface.dll+E1714: 74 0F                 - je TMInterface.dll+E1725
+TMInterface.dll+E1716: 83 B8 84 01 00 00 00  - cmp dword ptr [eax+00000184],00
+TMInterface.dll+E171D: 74 06                 - je TMInterface.dll+E1725
+TMInterface.dll+E171F: CC                    - int 3 
+TMInterface.dll+E1720: 15 D4 36 B9 57        - adc eax,TMInterface.dll+1636D4
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"crash bypass 2"</Description>
+      <LastState Activated="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TmForever.exe
+  Version: 
+  Date   : 2022-02-23
+  Author : fyz
+
+  This script does blah blah blah
+}
+
+[ENABLE]
+
+aobscanmodule(tm_bypass_crash_2,TMInterface.dll,74 23 8B 81 2C 01 00 00) // should be unique
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  jmp TMInterface.dll+E0E68
+  mov eax,[ecx+0000012C]
+  jmp return
+
+tm_bypass_crash_2:
+  jmp newmem
+  nop 3
+return:
+registersymbol(tm_bypass_crash_2)
+
+[DISABLE]
+
+tm_bypass_crash_2:
+  db 74 23 8B 81 2C 01 00 00
+
+unregistersymbol(tm_bypass_crash_2)
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: TMInterface.dll+E0E43
+
+TMInterface.dll+E0E22: 56                    - push esi
+TMInterface.dll+E0E23: 57                    - push edi
+TMInterface.dll+E0E24: 50                    - push eax
+TMInterface.dll+E0E25: 8D 45 F4              - lea eax,[ebp-0C]
+TMInterface.dll+E0E28: 64 A3 00 00 00 00     - mov fs:[00000000],eax
+TMInterface.dll+E0E2E: 8B D9                 - mov ebx,ecx
+TMInterface.dll+E0E30: 89 9D 38 FF FF FF     - mov [ebp-000000C8],ebx
+TMInterface.dll+E0E36: A1 80 15 40 00        - mov eax,[TmForever.exe+1580]
+TMInterface.dll+E0E3B: 8B 88 D8 FC FF FF     - mov ecx,[eax-00000328]
+TMInterface.dll+E0E41: 85 C9                 - test ecx,ecx
+// ---------- INJECTING HERE ----------
+TMInterface.dll+E0E43: 74 23                 - je TMInterface.dll+E0E68
+// ---------- DONE INJECTING  ----------
+TMInterface.dll+E0E45: 8B 81 2C 01 00 00     - mov eax,[ecx+0000012C]
+TMInterface.dll+E0E4B: 85 C0                 - test eax,eax
+TMInterface.dll+E0E4D: 74 19                 - je TMInterface.dll+E0E68
+TMInterface.dll+E0E4F: 8B 80 B0 01 00 00     - mov eax,[eax+000001B0]
+TMInterface.dll+E0E55: 85 C0                 - test eax,eax
+TMInterface.dll+E0E57: 74 0F                 - je TMInterface.dll+E0E68
+TMInterface.dll+E0E59: 83 B8 84 01 00 00 00  - cmp dword ptr [eax+00000184],00
+TMInterface.dll+E0E60: 74 06                 - je TMInterface.dll+E0E68
+TMInterface.dll+E0E62: CC                    - int 3 
+TMInterface.dll+E0E63: 15 D4 36 B9 57        - adc eax,TMInterface.dll+1636D4
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>3</ID>
+      <Description>"crash bypass 1"</Description>
+      <LastState Activated="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TmForever.exe
+  Version: 
+  Date   : 2022-02-23
+  Author : fyz
+
+  make tmi not fuck pointers 1
+}
+
+[ENABLE]
+
+aobscanmodule(tm_bypass_crash_1,TMInterface.dll,00 A1 80 15 40 00 8B 88 D8 FC FF FF 85 C9 74 23 8B 81 2C 01 00 00) // should be unique
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  jmp TMInterface.dll+E1A81
+  mov eax,[ecx+0000012C]
+  jmp return
+
+tm_bypass_crash_1+0E:
+  jmp newmem
+  nop 3
+return:
+registersymbol(tm_bypass_crash_1)
+
+[DISABLE]
+
+tm_bypass_crash_1+0E:
+  db 74 23 8B 81 2C 01 00 00
+
+unregistersymbol(tm_bypass_crash_1)
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: TMInterface.dll+E1A5C
+
+TMInterface.dll+E1A32: 57                             - push edi
+TMInterface.dll+E1A33: 50                             - push eax
+TMInterface.dll+E1A34: 8D 45 F4                       - lea eax,[ebp-0C]
+TMInterface.dll+E1A37: 64 A3 00 00 00 00              - mov fs:[00000000],eax
+TMInterface.dll+E1A3D: 8B F9                          - mov edi,ecx
+TMInterface.dll+E1A3F: 89 BD 14 FE FF FF              - mov [ebp-000001EC],edi
+TMInterface.dll+E1A45: C7 85 EC FD FF FF 00 00 00 00  - mov [ebp-00000214],00000000
+TMInterface.dll+E1A4F: A1 80 15 40 00                 - mov eax,[TmForever.exe+1580]
+TMInterface.dll+E1A54: 8B 88 D8 FC FF FF              - mov ecx,[eax-00000328]
+TMInterface.dll+E1A5A: 85 C9                          - test ecx,ecx
+// ---------- INJECTING HERE ----------
+TMInterface.dll+E1A5C: 74 23                          - je TMInterface.dll+E1A81
+// ---------- DONE INJECTING  ----------
+TMInterface.dll+E1A5E: 8B 81 2C 01 00 00              - mov eax,[ecx+0000012C]
+TMInterface.dll+E1A64: 85 C0                          - test eax,eax
+TMInterface.dll+E1A66: 74 19                          - je TMInterface.dll+E1A81
+TMInterface.dll+E1A68: 8B 80 B0 01 00 00              - mov eax,[eax+000001B0]
+TMInterface.dll+E1A6E: 85 C0                          - test eax,eax
+TMInterface.dll+E1A70: 74 0F                          - je TMInterface.dll+E1A81
+TMInterface.dll+E1A72: 83 B8 84 01 00 00 00           - cmp dword ptr [eax+00000184],00
+TMInterface.dll+E1A79: 74 06                          - je TMInterface.dll+E1A81
+TMInterface.dll+E1A7B: CC                             - int 3 
+TMInterface.dll+E1A7C: 15 D4 36 B9 57                 - adc eax,TMInterface.dll+1636D4
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>5</ID>
+      <Description>"fix bad time"</Description>
+      <LastState Activated="1"/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TmForever.exe
+  Version: 
+  Date   : 2022-02-23
+  Author : fyz
+
+  This script does blah blah blah
+}
+
+[ENABLE]
+
+aobscanmodule(tm_fix_bad_time,TMInterface.dll,89 3D F4 35 D3 5F) // should be unique
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov [ebp+0000010C],eax
+  jmp return
+
+tm_fix_bad_time:
+  jmp newmem
+  nop
+return:
+  jmp TmForever.exe+80D6F
+registersymbol(tm_fix_bad_time)
+
+[DISABLE]
+
+tm_fix_bad_time:
+  db 89 3D F4 35 D3 5F
+
+unregistersymbol(tm_fix_bad_time)
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: TMInterface.dll+B6DD0
+
+TMInterface.dll+B6DA8: 0F 1F 84 00 00 00 00 00  - nop dword ptr [eax+eax+00000000]
+TMInterface.dll+B6DB0: 8B 90 5C 03 00 00        - mov edx,[eax+0000035C]
+TMInterface.dll+B6DB6: 8B 88 54 03 00 00        - mov ecx,[eax+00000354]
+TMInterface.dll+B6DBC: 03 D6                    - add edx,esi
+TMInterface.dll+B6DBE: 46                       - inc esi
+TMInterface.dll+B6DBF: 81 04 D1 FF FF 00 00     - add [ecx+edx*8],0000FFFF
+TMInterface.dll+B6DC6: 3B B0 50 03 00 00        - cmp esi,[eax+00000350]
+TMInterface.dll+B6DCC: 7C E2                    - jl TMInterface.dll+B6DB0
+TMInterface.dll+B6DCE: 5E                       - pop esi
+TMInterface.dll+B6DCF: C3                       - ret 
+// ---------- INJECTING HERE ----------
+TMInterface.dll+B6DD0: 89 3D F4 35 D3 5F        - mov [TMInterface.dll+1635F4],edi
+// ---------- DONE INJECTING  ----------
+TMInterface.dll+B6DD6: 60                       - pushad 
+TMInterface.dll+B6DD7: E8 B4 FF FF FF           - call TMInterface.dll+B6D90
+TMInterface.dll+B6DDC: 61                       - popad 
+TMInterface.dll+B6DDD: 89 85 0C 01 00 00        - mov [ebp+0000010C],eax
+TMInterface.dll+B6DE3: FF 25 44 FE D2 5F        - jmp dword ptr [TMInterface.dll+15FE44]
+TMInterface.dll+B6DE9: CC                       - int 3 
+TMInterface.dll+B6DEA: CC                       - int 3 
+TMInterface.dll+B6DEB: CC                       - int 3 
+TMInterface.dll+B6DEC: CC                       - int 3 
+TMInterface.dll+B6DED: CC                       - int 3 
+}
+</AssemblerScript>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+  <Comments>Info about this table:
+</Comments>
+</CheatTable>
